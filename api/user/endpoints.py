@@ -9,13 +9,16 @@ This file contains the user endpoints for the API. It includes the following rou
 - POST /token: Get an access token
 - GET /me: Get the current user (not implemented yet)
 """
-from fastapi import (APIRouter, Depends, HTTPException, status)
-from configs import get_db, SessionLocal, ACCESS_TOKEN_EXPIRE_DAYS
+from fastapi import (APIRouter, Depends, HTTPException, status, UploadFile, File)
+
+import user
+from configs import get_db, SessionLocal, ACCESS_TOKEN_EXPIRE_DAYS, UPLOAD_FOLDER
 from fastapi.security import OAuth2PasswordRequestForm
 from user.models import User
 from user.schema import UserCreate, UserEdit, SuperUserCreate
 from user.config import *
 from datetime import timedelta
+import os
 from user.dependencies import authenticate_user, create_access_token, get_current_user
 
 
@@ -188,8 +191,17 @@ async def get_config(db: SessionLocal = Depends(get_db), current_user: User = De
 
 
 @router.post("/config", tags=["user"], status_code=status.HTTP_200_OK)
-async def post_config(db: SessionLocal = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def post_config(file: UploadFile = File(...), db: SessionLocal = Depends(get_db), current_user: User = Depends(get_current_user)):
     db_user = db.query(User).filter(User.id == current_user.id).first()
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+    file_location = os.path.join(UPLOAD_FOLDER, file.filename)
+    with open(file_location, "wb") as f:
+        f.write(file.file.read())
+    user.config_file_path = file_location
+    db.add(user)
+    db.commit()
+
+    return {"detail": "Config file uploaded successfully"}
 
