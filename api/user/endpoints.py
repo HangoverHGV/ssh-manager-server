@@ -189,6 +189,8 @@ async def get_config(db: SessionLocal = Depends(get_db), current_user: User = De
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    return {"config_file_path": db_user.config_file_path}
+
 
 @router.post("/config", tags=["user"], status_code=status.HTTP_200_OK)
 async def post_config(file: UploadFile = File(...), db: SessionLocal = Depends(get_db), current_user: User = Depends(get_current_user)):
