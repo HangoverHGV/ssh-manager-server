@@ -3,9 +3,9 @@ version: "3.9"
 services:
   api:
     build:
-      context: ./backend
-      dockerfile: Dockerfile-backend
-    container_name: Backend
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: ssh-manager
     ports:
       - "8000:8000"
     command: "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
