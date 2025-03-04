@@ -19,10 +19,11 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     is_superuser = Column(Boolean, default=False)
+    config_file_path = Column(String, default=None)
     created_at = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc))
     updated_at = Column(DateTime, default=datetime.datetime.now(datetime.timezone.utc), onupdate=datetime.datetime.now(datetime.timezone.utc))
 
-    blog_posts = relationship("BlogPost", back_populates="user", cascade="all, delete-orphan")
+
 
     def verify_password(self, password):
         return pwd_context.verify(password, self.hashed_password)

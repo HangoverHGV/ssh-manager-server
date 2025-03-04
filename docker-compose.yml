@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile-backend
+    container_name: Backend
+    ports:
+      - "8000:8000"
+    command: "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    volumes:
+      - ./api:/app
+      - dev-configs-data:/api/configs/data
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: devdb
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_PORT: 5432
+      SUPERUSER_SECRET_TOKEN: "supersecret"
+      SECRET_KEY: "SecretKey"
+    depends_on:
+      - db
+  db:
+    image: postgres:latest
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: devdb
+      POSTGRES_USER: devuser
+      POSTGRES_PASSWORD: changeme
+
+volumes:
+  db-data:
+  dev-configs-data:

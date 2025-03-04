@@ -9,6 +9,7 @@ from wait_for_db import wait_for_db
 from database import SessionLocal, engine
 from user import models
 from os import getenv
+import os
 
 
 # JWT CONFIG
@@ -59,6 +60,10 @@ app.add_middleware(
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
+
+UPLOAD_FOLDER = "/api/configs/data"
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 
 # Dependency to get DB
 def get_db():
