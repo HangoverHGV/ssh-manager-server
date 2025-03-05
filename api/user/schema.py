@@ -33,3 +33,9 @@ class SuperUserCreate(BaseModel):
     email: str
     password: str
     secret_token: str
+
+class ConfigItem(BaseModel):
+    name: str
+    hostname: str
+    port: Optional[str]
+    private_key: str

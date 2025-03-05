@@ -10,15 +10,15 @@ This file contains the user endpoints for the API. It includes the following rou
 - GET /me: Get the current user (not implemented yet)
 """
 from fastapi import (APIRouter, Depends, HTTPException, status, UploadFile, File)
-
-import user
+import json
 from configs import get_db, SessionLocal, ACCESS_TOKEN_EXPIRE_DAYS, UPLOAD_FOLDER
 from fastapi.security import OAuth2PasswordRequestForm
 from user.models import User
-from user.schema import UserCreate, UserEdit, SuperUserCreate
+from user.schema import UserCreate, UserEdit, SuperUserCreate, ConfigItem
 from user.config import *
 from datetime import timedelta
 import os
+from typing import List
 from user.dependencies import authenticate_user, create_access_token, get_current_user
 
 
@@ -183,27 +183,32 @@ async def login_for_access_token(db: SessionLocal = Depends(get_db), form_data: 
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/config", tags=["user"], status_code=status.HTTP_200_OK)
+@router.post("/config/data", tags=["user"], status_code=status.HTTP_200_OK)
 async def get_config(db: SessionLocal = Depends(get_db), current_user: User = Depends(get_current_user)):
     db_user = db.query(User).filter(User.id == current_user.id).first()
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+
+
     return {"config_file_path": db_user.config_file_path}
 
 
 @router.post("/config", tags=["user"], status_code=status.HTTP_200_OK)
-async def post_config(file: UploadFile = File(...), db: SessionLocal = Depends(get_db), current_user: User = Depends(get_current_user)):
+async def post_config(config_data: List[ConfigItem], db: SessionLocal = Depends(get_db), current_user: User = Depends(get_current_user)):
     db_user = db.query(User).filter(User.id == current_user.id).first()
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
-    file_location = os.path.join(UPLOAD_FOLDER, file.filename)
-    with open(file_location, "wb") as f:
-        f.write(file.file.read())
-    user.config_file_path = file_location
-    db.add(user)
+    # Save the modified JSON content to a file
+    file_location = os.path.join(UPLOAD_FOLDER, f"{current_user.id}_config.json")
+    with open(file_location, "w") as f:
+        json.dump([item.model_dump() for item in config_data], f)
+
+    # Update the user's config file path in the database
+    db_user.config_file_path = file_location
+    db.add(db_user)
     db.commit()
 
-    return {"detail": "Config file uploaded successfully"}
+    return {"detail": "Config file uploaded and processed successfully"}
 

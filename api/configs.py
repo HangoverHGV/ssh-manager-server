@@ -61,7 +61,7 @@ app.add_middleware(
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
-UPLOAD_FOLDER = "/api/configs/data"
+UPLOAD_FOLDER = "/vol/web/static"
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
