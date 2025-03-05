@@ -189,9 +189,14 @@ async def get_config(db: SessionLocal = Depends(get_db), current_user: User = De
     if not db_user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    if not db_user.config_file_path:
+        return {"config_file_path": None}
+
+    with open(db_user.config_file_path, "r") as f:
+        config_data = json.load(f)
 
 
-    return {"config_file_path": db_user.config_file_path}
+    return config_data
 
 
 @router.post("/config", tags=["user"], status_code=status.HTTP_200_OK)
